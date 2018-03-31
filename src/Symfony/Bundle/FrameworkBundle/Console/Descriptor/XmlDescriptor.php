@@ -64,6 +64,14 @@ class XmlDescriptor extends Descriptor
     /**
      * {@inheritdoc}
      */
+    protected function describeContainerAutoconfiguringTags(ContainerBuilder $builder, array $options = array())
+    {
+        $this->writeDocument($this->getContainerAutoconfiguringTagsDocument($builder, isset($options['show_private']) && $options['show_private']));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function describeContainerService($service, array $options = array(), ContainerBuilder $builder = null)
     {
         if (!isset($options['id'])) {
@@ -243,6 +251,29 @@ class XmlDescriptor extends Descriptor
             foreach ($definitions as $serviceId => $definition) {
                 $definitionXML = $this->getContainerDefinitionDocument($definition, $serviceId, true);
                 $tagXML->appendChild($dom->importNode($definitionXML->childNodes->item(0), true));
+            }
+        }
+
+        return $dom;
+    }
+
+    private function getContainerAutoconfiguringTagsDocument(ContainerBuilder $builder, bool $showPrivate = false): \DOMDocument
+    {
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->appendChild($containerXML = $dom->createElement('tags'));
+
+        $autoconfiguredInstanceofByTag = $this->getAutoconfiguredInstanceofByTag($builder);
+
+        foreach ($this->findDefinitionsByTag($builder, $showPrivate) as $tag => $definitions) {
+            if (!isset($autoconfiguredInstanceofByTag[$tag])) {
+                continue;
+            }
+            $containerXML->appendChild($tagXML = $dom->createElement('tag'));
+            $tagXML->setAttribute('name', $tag);
+
+            foreach ($autoconfiguredInstanceofByTag[$tag] as $autoconfiguredInstanceof) {;
+                $tagXML->appendChild($autoconfiguredInstanceofXML = $dom->createElement('autoconfigured-instanceof'));
+                $autoconfiguredInstanceofXML->appendChild(new \DOMText($autoconfiguredInstanceof));
             }
         }
 

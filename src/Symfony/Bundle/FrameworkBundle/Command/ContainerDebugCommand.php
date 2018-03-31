@@ -55,6 +55,7 @@ class ContainerDebugCommand extends Command
                 new InputOption('parameter', null, InputOption::VALUE_REQUIRED, 'Displays a specific parameter for an application'),
                 new InputOption('parameters', null, InputOption::VALUE_NONE, 'Displays parameters for an application'),
                 new InputOption('types', null, InputOption::VALUE_NONE, 'Displays types (classes/interfaces) available in the container'),
+                new InputOption('autoconfigure', null, InputOption::VALUE_NONE, 'Displays autoconfiguration interfaces for an application'),
                 new InputOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (txt, xml, json, or md)', 'txt'),
                 new InputOption('raw', null, InputOption::VALUE_NONE, 'To output raw description'),
             ))
@@ -71,6 +72,10 @@ To get specific information about a service, specify its name:
 To see available types that can be used for autowiring, use the <info>--types</info> flag:
 
   <info>php %command.full_name% --types</info>
+  
+To see available autoconfiguration interfaces, use the <info>--autoconfigure</info> flag:
+
+  <info>php %command.full_name% --autoconfigure</info>  
 
 By default, private services are hidden. You can display all services by
 using the <info>--show-private</info> flag:
@@ -121,6 +126,8 @@ EOF
             $options = array();
         } elseif ($parameter = $input->getOption('parameter')) {
             $options = array('parameter' => $parameter);
+        } elseif ($input->getOption('autoconfigure')) {
+            $options = array('group_by' => 'tags', 'show_private' => $input->getOption('show-private'), 'autoconfigure' => true);
         } elseif ($input->getOption('tags')) {
             $options = array('group_by' => 'tags', 'show_private' => $input->getOption('show-private'));
         } elseif ($tag = $input->getOption('tag')) {
@@ -189,14 +196,14 @@ EOF
 
         $kernel = $this->getApplication()->getKernel();
 
-        if (!$kernel->isDebug() || !(new ConfigCache($kernel->getContainer()->getParameter('debug.container.dump'), true))->isFresh()) {
+//        if (!$kernel->isDebug() || !(new ConfigCache($kernel->getContainer()->getParameter('debug.container.dump'), true))->isFresh()) {
             $buildContainer = \Closure::bind(function () { return $this->buildContainer(); }, $kernel, get_class($kernel));
             $container = $buildContainer();
             $container->getCompilerPassConfig()->setRemovingPasses(array());
             $container->compile();
-        } else {
-            (new XmlFileLoader($container = new ContainerBuilder(), new FileLocator()))->load($kernel->getContainer()->getParameter('debug.container.dump'));
-        }
+//        } else {
+//            (new XmlFileLoader($container = new ContainerBuilder(), new FileLocator()))->load($kernel->getContainer()->getParameter('debug.container.dump'));
+//        }
 
         return $this->containerBuilder = $container;
     }

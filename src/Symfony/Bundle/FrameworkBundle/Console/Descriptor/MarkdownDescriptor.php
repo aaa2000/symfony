@@ -97,6 +97,29 @@ class MarkdownDescriptor extends Descriptor
     /**
      * {@inheritdoc}
      */
+    protected function describeContainerAutoconfiguringTags(ContainerBuilder $builder, array $options = array())
+    {
+        $showPrivate = isset($options['show_private']) && $options['show_private'];
+        $this->write("Container autoconfiguring Tags\n==============================");
+
+
+        $autoconfiguredInstanceofByTag = $this->getAutoconfiguredInstanceofByTag($builder);
+
+        foreach ($this->findDefinitionsByTag($builder, $showPrivate) as $tag => $definitions) {
+            if (!isset($autoconfiguredInstanceofByTag[$tag])) {
+                continue;
+            }
+            $this->write("\n\n".$tag."\n".str_repeat('-', strlen($tag)));
+            foreach ($autoconfiguredInstanceofByTag[$tag] as $autoconfiguredInstanceof) {
+                $this->write("\n\n");
+                $this->write(sprintf('- %s', $autoconfiguredInstanceof));
+            }
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function describeContainerService($service, array $options = array(), ContainerBuilder $builder = null)
     {
         if (!isset($options['id'])) {
